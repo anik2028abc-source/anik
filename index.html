@@ -6,9 +6,9 @@
     <title>স্বর্ণের ক্যালকুলেটর</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Arial', sans-serif; background: #f3c623; text-align: center; padding: 15px; }
+        body { font-family: 'Noto Sans Bengali', sans-serif; background: #f3c623; text-align: center; padding: 15px; }
         .calculator {
-            background: #ffffff; padding: 15px; width: 90%; max-width: 320px; margin: auto; border-radius: 10px;
+            background: #ffffff; padding: 15px; width: 90%; max-width: 340px; margin: auto; border-radius: 10px;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
         }
         h2 { font-size: 20px; margin-bottom: 10px; border-bottom: 2px solid #f3c623; padding-bottom: 5px; color: #333; }
@@ -18,28 +18,36 @@
         button { background: #f3c623; color: white; cursor: pointer; border: none; font-weight: bold; }
         button:hover { background: #d4a317; }
         #result, #finalResult { margin-top: 10px; font-size: 16px; font-weight: bold; color: #333; }
+        .btn-row { display: flex; justify-content: space-between; gap: 6px; flex-wrap: wrap; }
+        .btn-row button { flex: 1; }
     </style>
 </head>
 <body>
     <div class="calculator">
-        <h2>স্বর্ণের ক্যালকুলেটর</h2>
+        <h2>🔶 Gold & Silver Price Calculator for BD 🔶</h2>
+
         <input type="number" id="customValue" placeholder="স্বর্ণের দাম (প্রতি ভরি)" oninput="updateResults()">
         <input type="number" id="optionalValue" placeholder="মজুরি (প্রতি ভরি)" oninput="calculateResults()">
-        
         <input type="number" id="input1" placeholder="ভরি" min="0" oninput="calculateResults()">
         <input type="number" id="input2" placeholder="আনা" min="0" oninput="calculateResults()">
         <input type="number" id="input3" placeholder="রত্তি" min="0" oninput="calculateResults()">
         <input type="number" id="input4" placeholder="পয়েন্ট" min="0" oninput="calculateResults()">
-        
-        <button onclick="clearFields()">🗑 পরিষ্কার করুন</button>
-        <button onclick="downloadReceipt()">🧾 রসিদ ডাউনলোড</button>
+
+        <div class="btn-row">
+            <button onclick="clearFields()">🗑 পরিষ্কার</button>
+            <button onclick="downloadReceipt()">🧾 ডাউনলোড</button>
+        </div>
+        <div class="btn-row">
+            <button onclick="copyReceipt()">📋 কপি</button>
+            <button onclick="shareReceipt()">📤 শেয়ার</button>
+        </div>
 
         <div id="result"></div>
-        <div id="finalResult">মোট টাকা= ৳০</div>
+        <div id="finalResult">মোট টাকা = ৳০</div>
     </div>
 
     <script>
-        let result1 = 0, totalWage = 0, points = 0;
+        let result1 = 0, totalWage = 0, points = 0, receiptContent = "";
 
         function updateResults() {
             const customValue = parseFloat(document.getElementById("customValue").value) || 0;
@@ -65,20 +73,20 @@
             let finalPoint = remainingPoints % 10;
             let gramResult = (points / 960) * 11.66;
             
-            document.getElementById("result").innerHTML = `📏 ওজন: ${finalVori} ভরি, ${finalAna} আনা, ${finalRotti} রত্তি, ${finalPoint} পয়েন্ট | ✨ ${gramResult.toFixed(2)}g`;
+            document.getElementById("result").innerHTML = `📏 ওজন: ${finalVori} ভরি, ${finalAna} আনা, ${finalRotti} রত্তি, ${finalPoint} পয়েন্ট | ✨ ${gramResult.toFixed(2)} g`;
             let finalResult = (result1 * points) + totalWage;
-            document.getElementById("finalResult").innerText = `🟢 মোট টাকা= ৳${finalResult.toFixed(2)}`;
+            document.getElementById("finalResult").innerText = `🟢 মোট টাকা = ৳${finalResult.toFixed(2)}`;
         }
 
         function clearFields() {
             if (confirm('আপনি কি সব তথ্য মুছতে চান?')) {
                 document.querySelectorAll('input').forEach(input => input.value = '');
                 document.getElementById("result").innerHTML = "";
-                document.getElementById("finalResult").innerText = 'মোট টাকা= ৳০';
+                document.getElementById("finalResult").innerText = 'মোট টাকা = ৳০';
             }
         }
 
-        function downloadReceipt() {
+        function buildReceipt() {
             let customValue = parseFloat(document.getElementById("customValue").value) || 0;
             let optionalValue = parseFloat(document.getElementById("optionalValue").value) || 0;
             let currentDate = new Date().toLocaleString('bn-BD', { dateStyle: 'full', timeStyle: 'short' });
@@ -92,27 +100,51 @@
             let gramResult = (points / 960) * 11.66;
             let finalResultText = document.getElementById('finalResult').innerText;
 
-            let receiptContent = `🔶 Charigram Gold Market 🔶
+            receiptContent = `🔶 Charigram Gold Market 🔶
 -----------------------------------
 📅 রসিদ তৈরির সময়: ${currentDate}
 -----------------------------------
-💰 স্বর্ণের বর্তমান দাম: ৳${customValue} প্রতি ভরি
+💰 স্বর্ণের দাম: ৳${customValue} প্রতি ভরি
 পরিণত মান: ${finalVori} ভরি, ${finalAna} আনা, ${finalRotti} রত্তি, ${finalPoint} পয়েন্ট
-✨ ওজন: ${gramResult.toFixed(2)}g
+✨ ওজন: ${gramResult.toFixed(2)} গ্রাম
 🔨 প্রতি ভরির মজুরি: ৳${optionalValue.toFixed(2)}
 💵 মোট মজুরি: ৳${totalWage.toFixed(2)}
 -----------------------------------
 ${finalResultText}
 -----------------------------------
-✅ ধন্যবাদ! Charigram Gold Market-এ আবার আসবেন!`;
+✅ ধন্যবাদ!`;
+        }
 
-            let blob = new Blob([receiptContent], { type: 'text/plain' });
-            let link = document.createElement('a');
+        function downloadReceipt() {
+            buildReceipt();
+            const blob = new Blob([receiptContent], { type: 'text/plain;charset=utf-8' });
+            const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
-            link.download = `Gold_Calculator_Receipt_${new Date().getTime()}.txt`;
+            link.download = `Gold_Receipt_${new Date().getTime()}.txt`;
             link.click();
+        }
+
+        async function copyReceipt() {
+            buildReceipt();
+            await navigator.clipboard.writeText(receiptContent);
+            alert("✅ রসিদ কপি করা হয়েছে!");
+        }
+
+        async function shareReceipt() {
+            buildReceipt();
+            if (navigator.share) {
+                try {
+                    await navigator.share({
+                        title: "Charigram Gold Market",
+                        text: receiptContent
+                    });
+                } catch (err) {
+                    alert("শেয়ার বাতিল করা হয়েছে।");
+                }
+            } else {
+                alert("❌ এই ডিভাইসে শেয়ার ফিচার সমর্থন করে না!");
+            }
         }
     </script>
 </body>
 </html>
-

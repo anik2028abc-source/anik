@@ -47,6 +47,9 @@
     </div>
 
     <script>
+        // আপডেট: 1 ভরি = 11.664 গ্রাম (পুরোচিহ্নে)
+        const GRAM_PER_VORI = 11.664;
+
         let result1 = 0, totalWage = 0, points = 0, receiptContent = "";
 
         function updateResults() {
@@ -71,9 +74,10 @@
             remainingPoints %= 60;
             let finalRotti = Math.floor(remainingPoints / 10);
             let finalPoint = remainingPoints % 10;
-            let gramResult = (points / 960) * 11.66;
+            // গ্রাম হিসাব এখন সঠিক মান ব্যবহার করছে
+            let gramResult = (points / 960) * GRAM_PER_VORI;
             
-            document.getElementById("result").innerHTML = `📏 ওজন: ${finalVori} ভরি, ${finalAna} আনা, ${finalRotti} রত্তি, ${finalPoint} পয়েন্ট | ✨ ${gramResult.toFixed(2)} g`;
+            document.getElementById("result").innerHTML = `📏 ওজন: ${finalVori} ভরি, ${finalAna} আনা, ${finalRotti} রত্তি, ${finalPoint} পয়েন্ট | ✨ ${gramResult.toFixed(3)} g`;
             let finalResult = (result1 * points) + totalWage;
             document.getElementById("finalResult").innerText = `🟢 মোট টাকা = ৳${finalResult.toFixed(2)}`;
         }
@@ -97,22 +101,10 @@
             remainingPoints %= 60;
             let finalRotti = Math.floor(remainingPoints / 10);
             let finalPoint = remainingPoints % 10;
-            let gramResult = (points / 960) * 11.66;
+            let gramResult = (points / 960) * GRAM_PER_VORI;
             let finalResultText = document.getElementById('finalResult').innerText;
 
-            receiptContent = `🔶 Charigram Gold Market 🔶
------------------------------------
-📅 রসিদ তৈরির সময়: ${currentDate}
------------------------------------
-💰 স্বর্ণের দাম: ৳${customValue} প্রতি ভরি
-পরিণত মান: ${finalVori} ভরি, ${finalAna} আনা, ${finalRotti} রত্তি, ${finalPoint} পয়েন্ট
-✨ ওজন: ${gramResult.toFixed(2)} গ্রাম
-🔨 প্রতি ভরির মজুরি: ৳${optionalValue.toFixed(2)}
-💵 মোট মজুরি: ৳${totalWage.toFixed(2)}
------------------------------------
-${finalResultText}
------------------------------------
-✅ ধন্যবাদ!`;
+            receiptContent = `🔶 Charigram Gold Market 🔶\n-----------------------------------\n📅 রসিদ তৈরির সময়: ${currentDate}\n-----------------------------------\n💰 স্বর্ণের দাম: ৳${customValue} প্রতি ভরি\nপরিণত মান: ${finalVori} ভরি, ${finalAna} আনা, ${finalRotti} রত্তি, ${finalPoint} পয়েন্ট\n✨ ওজন: ${gramResult.toFixed(3)} গ্রাম\n🔨 প্রতি ভরির মজুরি: ৳${optionalValue.toFixed(2)}\n💵 মোট মজুরি: ৳${totalWage.toFixed(2)}\n-----------------------------------\n${finalResultText}\n-----------------------------------\n✅ ধন্যবাদ!`;
         }
 
         function downloadReceipt() {

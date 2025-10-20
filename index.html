@@ -26,12 +26,13 @@
     <div class="calculator">
         <h2>🔶 Gold & Silver Price Calculator for BD 🔶</h2>
 
-        <input type="number" id="customValue" placeholder="স্বর্ণের দাম (প্রতি ভরি)" oninput="updateResults()">
-        <input type="number" id="optionalValue" placeholder="মজুরি (প্রতি ভরি)" oninput="calculateResults()">
+        <input type="number" id="customValue" placeholder="স্বর্ণের দাম (প্রতি ভরি)" oninput="updateResults()" step="any" min="0">
+        <input type="number" id="optionalValue" placeholder="মজুরি (প্রতি ভরি)" oninput="calculateResults()" step="any" min="0">
         <input type="number" id="input1" placeholder="ভরি" min="0" oninput="calculateResults()">
         <input type="number" id="input2" placeholder="আনা" min="0" oninput="calculateResults()">
         <input type="number" id="input3" placeholder="রত্তি" min="0" oninput="calculateResults()">
         <input type="number" id="input4" placeholder="পয়েন্ট" min="0" oninput="calculateResults()">
+        <input type="number" id="gramInput" placeholder="গ্রাম (যেমন 11.664)" step="any" oninput="convertFromGram()">
 
         <div class="btn-row">
             <button onclick="clearFields()">🗑 পরিষ্কার</button>
@@ -47,7 +48,6 @@
     </div>
 
     <script>
-        // আপডেট: 1 ভরি = 11.664 গ্রাম (পুরোচিহ্নে)
         const GRAM_PER_VORI = 11.664;
 
         let result1 = 0, totalWage = 0, points = 0, receiptContent = "";
@@ -65,21 +65,61 @@
             let input4 = parseFloat(document.getElementById('input4').value) || 0;
             let optionalValue = parseFloat(document.getElementById('optionalValue').value) || 0;
 
+            // পয়েন্ট গণনা (ভরি/আনা/রত্তি/পয়েন্ট থেকে)
             points = (input1 * 960) + (input2 * 60) + (input3 * 10) + input4;
             totalWage = (optionalValue / 960) * points;
-            
+
+            // ভর/আনা/রত্তি/পয়েন্ট ভাগ করা (প্রদর্শনের জন্য)
             let finalVori = Math.floor(points / 960);
             let remainingPoints = points % 960;
             let finalAna = Math.floor(remainingPoints / 60);
             remainingPoints %= 60;
+            // এখানে finalRotti ও finalPoint fractional হতে পারে যদি points fractional হয়
             let finalRotti = Math.floor(remainingPoints / 10);
             let finalPoint = remainingPoints % 10;
-            // গ্রাম হিসাব এখন সঠিক মান ব্যবহার করছে
+
+            // প্রদর্শনের জন্য পয়েন্টকে দুই দশমিক পর্যন্ত সীমাবদ্ধ করা
+            let displayPoint = Number(finalPoint).toFixed(2);
+
+            // গ্রাম হিসাব
             let gramResult = (points / 960) * GRAM_PER_VORI;
-            
-            document.getElementById("result").innerHTML = `📏 ওজন: ${finalVori} ভরি, ${finalAna} আনা, ${finalRotti} রত্তি, ${finalPoint} পয়েন্ট | ✨ ${gramResult.toFixed(3)} g`;
+
+            document.getElementById("result").innerHTML = `📏 ওজন: ${finalVori} ভরি, ${finalAna} আনা, ${finalRotti} রত্তি, ${displayPoint} পয়েন্ট | ✨ ${gramResult.toFixed(3)} g`;
             let finalResult = (result1 * points) + totalWage;
             document.getElementById("finalResult").innerText = `🟢 মোট টাকা = ৳${finalResult.toFixed(2)}`;
+        }
+
+        function convertFromGram() {
+            const gramValue = parseFloat(document.getElementById('gramInput').value) || 0;
+            if (gramValue <= 0) {
+                // যদি খালি বা শূন্য হয়, কিছু না করে রিটার্ন
+                return;
+            }
+
+            // গ্রাম → পয়েন্ট কনভার্সন
+            // points may be fractional here
+            points = (gramValue / GRAM_PER_VORI) * 960;
+
+            // পয়েন্ট → ভরি/আনা/রত্তি/পয়েন্ট (fractional-safe)
+            let vori = Math.floor(points / 960);
+            let rem = points - (vori * 960); // fractional remainder
+            let ana = Math.floor(rem / 60);
+            rem = rem - (ana * 60);
+            let rotti = Math.floor(rem / 10);
+            let point = rem - (rotti * 10); // point can be fractional
+
+            // ইনপুট বক্সে অটো ফিল (point-এ ছোট দশমিক রাখলে internal value রাখা হবে)
+            document.getElementById('input1').value = vori;
+            document.getElementById('input2').value = ana;
+            document.getElementById('input3').value = rotti;
+            // input4 (point) এ পুরো কোডের মত পুরো দশমিক রাখলে UI এ অনেক দেখতে সমস্যা হবে,
+            // তাই এখানে আমরা input4-এও 2 দশমিক পর্যন্ত দেখাবো, কিন্তু internal 'points' ধরে রাখছি
+            document.getElementById('input4').value = Number(point).toFixed(2);
+
+            // এখন রেজাল্ট রিফ্রেশ করব — calculateResults() points কে আবার নির্ণয় করে নেবে
+            // কিন্তু calculateResults() এখন input4 থেকে full numeric value নেবে (যা toFixed দিয়ে স্ট্রিং হতে পারে)
+            // যাতে internal consistency থাকে, আমরা input4 কে parseFloat করে ব্যবহার করেছি
+            calculateResults();
         }
 
         function clearFields() {
@@ -87,6 +127,10 @@
                 document.querySelectorAll('input').forEach(input => input.value = '');
                 document.getElementById("result").innerHTML = "";
                 document.getElementById("finalResult").innerText = 'মোট টাকা = ৳০';
+                // reset internal variables
+                points = 0;
+                totalWage = 0;
+                result1 = 0;
             }
         }
 
@@ -104,7 +148,10 @@
             let gramResult = (points / 960) * GRAM_PER_VORI;
             let finalResultText = document.getElementById('finalResult').innerText;
 
-            receiptContent = `🔶 Charigram Gold Market 🔶\n-----------------------------------\n📅 রসিদ তৈরির সময়: ${currentDate}\n-----------------------------------\n💰 স্বর্ণের দাম: ৳${customValue} প্রতি ভরি\nপরিণত মান: ${finalVori} ভরি, ${finalAna} আনা, ${finalRotti} রত্তি, ${finalPoint} পয়েন্ট\n✨ ওজন: ${gramResult.toFixed(3)} গ্রাম\n🔨 প্রতি ভরির মজুরি: ৳${optionalValue.toFixed(2)}\n💵 মোট মজুরি: ৳${totalWage.toFixed(2)}\n-----------------------------------\n${finalResultText}\n-----------------------------------\n✅ ধন্যবাদ!`;
+            // receipt এও পয়েন্ট দুই দশমিক দেখাচ্ছি
+            let receiptPoint = Number(finalPoint).toFixed(2);
+
+            receiptContent = `🔶 Charigram Gold Market 🔶\n-----------------------------------\n📅 রসিদ তৈরির সময়: ${currentDate}\n-----------------------------------\n💰 স্বর্ণের দাম: ৳${customValue} প্রতি ভরি\nপরিণত মান: ${finalVori} ভরি, ${finalAna} আনা, ${finalRotti} রত্তি, ${receiptPoint} পয়েন্ট\n✨ ওজন: ${gramResult.toFixed(3)} গ্রাম\n🔨 প্রতি ভরির মজুরি: ৳${optionalValue.toFixed(2)}\n💵 মোট মজুরি: ৳${totalWage.toFixed(2)}\n-----------------------------------\n${finalResultText}\n-----------------------------------\n✅ ধন্যবাদ!`;
         }
 
         function downloadReceipt() {
